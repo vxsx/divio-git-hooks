@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 changed_files="$(git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD)"
-build_static="gulp build"
 
 build_static() {
     msg "Static files changed, rebuilding"
@@ -10,6 +9,7 @@ build_static() {
 }
 
 rebuild_container() {
+    # not using `divio project update` here since it tries to pull
     docker-compose build && msg "Container rebuilt successfully!";
 }
 
