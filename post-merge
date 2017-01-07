@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+changed_files="$(git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD)"
+build_static="gulp build"
+
+build_static() {
+    msg "Static files changed, rebuilding"
+    docker-compose run --rm web gulp build
+    msg "Built static assets"
+}
+
+rebuild_container() {
+    docker-compose build && msg "Container rebuilt successfully!";
+}
+
+msg() {
+    echo "[post-merge hook] $1"
+}
+
+check_static() {
+    echo "$changed_files" | grep --quiet ".*\.sass\|.*\.scss\|.*\.js" && build_static
+}
+
+check_if_need_to_rebuild() {
+    exec < /dev/tty
+
+    while true; do
+        read -p "[post-merge hook] New dependencies detected. Should I rebuild the container? (Y/n) " yn
+        if [ "$yn" = "" ]; then
+            yn='Y'
+        fi
+        case $yn in
+            # have to rebuild static since mounted folder wouldn't have correct one
+            [Yy] ) rebuild_container && build_static; exit;;
+            [Nn] ) exit;;
+            * ) msg "Please answer y or n for yes or no.";;
+        esac
+    done
+}
+
+rebuild_if_needed() {
+    echo "$changed_files" | grep --quiet "package.json" || grep --quiet "requirements.in" && check_if_need_to_rebuild
+}
+
+run() {
+    rebuild_if_needed
+
+    # In case there's no need for rebuild just check static
+    check_static
+}
+
+run
