@@ -39,7 +39,7 @@ check_if_need_to_rebuild() {
 }
 
 rebuild_if_needed() {
-    echo "$changed_files" | grep --quiet "package.json" || grep --quiet "requirements.in" && check_if_need_to_rebuild
+    echo "$changed_files" | grep --quiet "package.json\|requirements.in" && check_if_need_to_rebuild
 }
 
 run() {
